@@ -11,6 +11,8 @@ import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -24,6 +26,8 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
     private static final String TAG = "MainActivity";
     private CameraView mOpenCVCameraView;
+    private TextView mDigit, mProbabilty, mTimeCost;
+    private Button mDetect;
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -52,6 +56,18 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         mOpenCVCameraView = (CameraView) findViewById(R.id.camera_view);
         mOpenCVCameraView.setCvCameraViewListener(this);
         mOpenCVCameraView.setVisibility(SurfaceView.VISIBLE);
+
+        mDigit = (TextView) findViewById(R.id.digit);
+        mProbabilty = (TextView) findViewById(R.id.probability);
+        mTimeCost = (TextView) findViewById(R.id.timecost);
+        mDetect = (Button) findViewById(R.id.detect);
+
+        mDetect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.e(TAG, "Button Clicked");
+            }
+        });
     }
 
     @Override
