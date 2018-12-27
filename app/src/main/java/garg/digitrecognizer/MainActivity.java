@@ -19,6 +19,9 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import static java.lang.System.exit;
 
@@ -28,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private CameraView mOpenCVCameraView;
     private TextView mDigit, mProbabilty, mTimeCost;
     private Button mDetect;
+    private Mat mRGBA, mInput, mIntermediate;
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -74,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     protected void onResume() {
         super.onResume();
 
-        if(!checkPermission())requestPermission();
+        if (!checkPermission()) requestPermission();
 
         //Intialize Opencv
         if (!OpenCVLoader.initDebug()) {
@@ -85,21 +89,49 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
 
-
         hideSystemUI();
     }
 
     @Override
     public void onCameraViewStarted(int width, int height) {
+        mRGBA = new Mat();
+        mInput = new Mat();
+        mIntermediate = new Mat();
     }
 
     @Override
     public void onCameraViewStopped() {
+        if(mRGBA!=null)mRGBA.release();
+        if(mIntermediate!=null)mIntermediate.release();
+        if(mInput!=null)mInput.release();
     }
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        return inputFrame.rgba();
+        mRGBA = inputFrame.rgba();
+
+        // Preprocessing image before sending to classifier
+        int top = mRGBA.rows() / 2 - 140;
+        int left = mRGBA.cols() / 2 - 140;
+        int height = 140 * 2;
+        int width = 140 * 2;
+
+        Mat gray = inputFrame.gray();
+        Imgproc.rectangle(mRGBA, new Point(left, top), new Point(left + width, top + height), new Scalar(255, 255, 255), 2);
+        mIntermediate = gray.submat(top, top + height, left, left + width);
+        Imgproc.GaussianBlur(mIntermediate, mIntermediate,  new org.opencv.core.Size(7,7),2 , 2);
+        Imgproc.adaptiveThreshold(mIntermediate, mIntermediate, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 5, 5);
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new org.opencv.core.Size(9,9));
+        Imgproc.dilate(mIntermediate, mIntermediate, element);
+        Mat element1 = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new org.opencv.core.Size(3,3));
+        Imgproc.erode(mIntermediate, mIntermediate, element1);
+        Imgproc.resize(mIntermediate, mInput, new org.opencv.core.Size(28,28));
+
+        //Testing Only
+        //Mat topConner = mRGBA.submat(0,height,0,width);
+        //Imgproc.cvtColor(mIntermediate, topConner, Imgproc.COLOR_GRAY2BGRA, 4);
+
+        return mRGBA;
     }
 
     @Override
@@ -129,7 +161,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_DENIED;
     }
 
-    private void requestPermission(){
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},100);
+    private void requestPermission() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 100);
     }
 }
