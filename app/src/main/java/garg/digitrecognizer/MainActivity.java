@@ -1,5 +1,10 @@
 package garg.digitrecognizer;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,6 +17,8 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
+
+import static java.lang.System.exit;
 
 public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
 
@@ -51,6 +58,8 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     protected void onResume() {
         super.onResume();
 
+        if(!checkPermission())requestPermission();
+
         //Intialize Opencv
         if (!OpenCVLoader.initDebug()) {
             Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
@@ -59,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
+
 
         hideSystemUI();
     }
@@ -76,6 +86,20 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         return inputFrame.rgba();
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 100: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.e(TAG, "Camera Permission Granted");
+                } else {
+                    Log.e(TAG, "Camera Permission Denied. Closing the App.");
+                    exit(0);
+                }
+            }
+        }
+    }
+
     private void hideSystemUI() {
         int windowVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -83,5 +107,13 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_FULLSCREEN;
         getWindow().getDecorView().setSystemUiVisibility(windowVisibility);
+    }
+
+    private boolean checkPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_DENIED;
+    }
+
+    private void requestPermission(){
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},100);
     }
 }
