@@ -23,6 +23,8 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.IOException;
+
 import static java.lang.System.exit;
 
 public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
@@ -32,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private TextView mDigit, mProbabilty, mTimeCost;
     private Button mDetect;
     private Mat mRGBA, mInput, mIntermediate;
+    private Classifier mClassifier;
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -69,7 +72,15 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         mDetect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.e(TAG, "Button Clicked");
+                Log.i(TAG, "Button Clicked");
+                if (mClassifier != null) {
+                    Result result = mClassifier.classify(mInput);
+                    mDigit.setText(String.valueOf(result.getDigit()));
+                    String prob = String.valueOf(result.getProbability());
+                    mProbabilty.setText(prob.substring(0, 4 < prob.length() ? 4 : prob.length()));
+                    mTimeCost.setText(String.valueOf(result.getTimeCost()) + " ms");
+
+                }
             }
         });
     }
@@ -88,8 +99,13 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
-
         hideSystemUI();
+
+        try {
+            mClassifier = new Classifier(MainActivity.this);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to initialize an image classifier.", e);
+        }
     }
 
     @Override
@@ -101,9 +117,9 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
     @Override
     public void onCameraViewStopped() {
-        if(mRGBA!=null)mRGBA.release();
-        if(mIntermediate!=null)mIntermediate.release();
-        if(mInput!=null)mInput.release();
+        if (mRGBA != null) mRGBA.release();
+        if (mIntermediate != null) mIntermediate.release();
+        if (mInput != null) mInput.release();
     }
 
     @Override
@@ -119,17 +135,17 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         Mat gray = inputFrame.gray();
         Imgproc.rectangle(mRGBA, new Point(left, top), new Point(left + width, top + height), new Scalar(255, 255, 255), 2);
         mIntermediate = gray.submat(top, top + height, left, left + width);
-        Imgproc.GaussianBlur(mIntermediate, mIntermediate,  new org.opencv.core.Size(7,7),2 , 2);
+        Imgproc.GaussianBlur(mIntermediate, mIntermediate, new org.opencv.core.Size(7, 7), 2, 2);
         Imgproc.adaptiveThreshold(mIntermediate, mIntermediate, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 5, 5);
-        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new org.opencv.core.Size(9,9));
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new org.opencv.core.Size(9, 9));
         Imgproc.dilate(mIntermediate, mIntermediate, element);
-        Mat element1 = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new org.opencv.core.Size(3,3));
+        Mat element1 = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new org.opencv.core.Size(3, 3));
         Imgproc.erode(mIntermediate, mIntermediate, element1);
-        Imgproc.resize(mIntermediate, mInput, new org.opencv.core.Size(28,28));
+        Imgproc.resize(mIntermediate, mInput, new org.opencv.core.Size(28, 28));
 
         //Testing Only
-        //Mat topConner = mRGBA.submat(0,height,0,width);
-        //Imgproc.cvtColor(mIntermediate, topConner, Imgproc.COLOR_GRAY2BGRA, 4);
+        Mat topConner = mRGBA.submat(0, height, 0, width);
+        Imgproc.cvtColor(mIntermediate, topConner, Imgproc.COLOR_GRAY2BGRA, 4);
 
         return mRGBA;
     }
