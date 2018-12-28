@@ -15,7 +15,7 @@
         opencv:camera_id="any" />
 
     <LinearLayout
-        android:layout_width="200dp"
+        android:layout_width="130dp"
         android:layout_height="match_parent"
         android:background="#aa000000"
         android:orientation="vertical"
@@ -23,8 +23,10 @@
         app:layout_constraintRight_toRightOf="parent">
 
         <LinearLayout
+            android:id="@+id/linear_layout_digit"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -48,8 +50,10 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/linear_layout_prob"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -73,8 +77,10 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/linear_layout_time"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -98,15 +104,20 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:gravity="center"
             android:layout_weight="1">
+
             <Button
                 android:id="@+id/detect"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="80dp"
+                android:layout_height="40dp"
                 android:layout_gravity="bottom"
-                android:text="Detect" />
+                android:background="@drawable/button"
+                android:text="Detect"
+                android:textColor="#ffffff"
+                android:textSize="16sp" />
         </LinearLayout>
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>

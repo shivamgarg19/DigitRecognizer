@@ -12,7 +12,9 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -32,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private static final String TAG = "MainActivity";
     private CameraView mOpenCVCameraView;
     private TextView mDigit, mProbabilty, mTimeCost;
+    private LinearLayout mDigitLL, mProbabiltyLL, mTimeCostLL;
     private Button mDetect;
     private Mat mRGBA, mInput, mIntermediate;
     private Classifier mClassifier;
@@ -69,12 +72,20 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         mTimeCost = (TextView) findViewById(R.id.timecost);
         mDetect = (Button) findViewById(R.id.detect);
 
+        mDigitLL = (LinearLayout) findViewById(R.id.linear_layout_digit);
+        mProbabiltyLL = (LinearLayout) findViewById(R.id.linear_layout_prob);
+        mTimeCostLL = (LinearLayout) findViewById(R.id.linear_layout_time);
+
         mDetect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Log.i(TAG, "Button Clicked");
+                Toast.makeText(MainActivity.this, "Processing...", Toast.LENGTH_SHORT).show();
                 if (mClassifier != null) {
                     Result result = mClassifier.classify(mInput);
+                    mDigitLL.setVisibility(View.VISIBLE);
+                    mProbabiltyLL.setVisibility(View.VISIBLE);
+                    mTimeCostLL.setVisibility(View.VISIBLE);
                     mDigit.setText(String.valueOf(result.getDigit()));
                     String prob = String.valueOf(result.getProbability());
                     mProbabilty.setText(prob.substring(0, 4 < prob.length() ? 4 : prob.length()));
@@ -99,7 +110,8 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
-        hideSystemUI();
+
+        //hideSystemUI();
 
         try {
             mClassifier = new Classifier(MainActivity.this);
@@ -144,8 +156,8 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         Imgproc.resize(mIntermediate, mInput, new org.opencv.core.Size(28, 28));
 
         //Testing Only
-        Mat topConner = mRGBA.submat(0, height, 0, width);
-        Imgproc.cvtColor(mIntermediate, topConner, Imgproc.COLOR_GRAY2BGRA, 4);
+        //Mat topConner = mRGBA.submat(0, height, 0, width);
+        //Imgproc.cvtColor(mIntermediate, topConner, Imgproc.COLOR_GRAY2BGRA, 4);
 
         return mRGBA;
     }
